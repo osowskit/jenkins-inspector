@@ -24,18 +24,21 @@ jobs.each do | job |
   #puts job
   config =  @client.job.get_config(job)
   response = Nori.new.parse(config)
+  key, value = response.first
+  if value.key?("triggers") && value["triggers"] != nil
 
-  if response.key?("project") && response["project"].key?("triggers")
-  
-    begin
-      if response["project"]["triggers"].key?("hudson.triggers.SCMTrigger")
-        #puts trigger
-        puts response["project"]["triggers"]["hudson.triggers.SCMTrigger"]["spec"]
-      elsif response["project"]["triggers"].key?("org.jenkinsci.plugins.ghprb.GhprbTrigger")
-        puts response["project"]["triggers"]["org.jenkinsci.plugins.ghprb.GhprbTrigger"]["spec"]
+    value["triggers"].each do |trigger_key, trigger_value|
+
+      if !trigger_value.kind_of?(String) && trigger_value.key?("spec")
+        # Defer to GitHub Webhook instead of polling
+        if trigger_value.key?("useGitHubHooks")
+          puts "Use GitHub Hooks : #{trigger_value["useGitHubHooks"]}"
+        end
+        # Will this job poll if enabled
+        if !trigger_value["spec"].nil?
+          puts trigger_value["spec"]
+        end
       end
-    rescue Exception => e
-      puts "#{e}"
     end
   end
 end
