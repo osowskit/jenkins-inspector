@@ -25,6 +25,10 @@ jobs.each do | job |
   config =  @client.job.get_config(job)
   response = Nori.new.parse(config)
   key, value = response.first
+  if value.key?("disabled")
+    puts "Job is disabled : #{value["disabled"]}"
+  end
+
   if value.key?("triggers") && value["triggers"] != nil
 
     value["triggers"].each do |trigger_key, trigger_value|
